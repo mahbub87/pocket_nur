@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'package:provider/provider.dart';
+
+import 'controllers/home_controller.dart';
+import 'screens/home/home_screen.dart';
 
 void main() {
   runApp(const PocketNurApp());
@@ -10,14 +13,17 @@ class PocketNurApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Pocket Nur',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+    return ChangeNotifierProvider(
+      create: (_) => HomeController(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Pocket Nur',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        ),
+        home: const HomeScreen(),
       ),
-      home: const HomeScreen(),
     );
   }
 }
