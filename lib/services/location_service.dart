@@ -33,8 +33,15 @@ class LocationService {
     final prefs = await SharedPreferences.getInstance();
     final cached = prefs.getString(_locationCacheKey);
 
+    // Always fetch new location if cache is missing or position changed
     if (cached != null) {
-      return cached;
+      // Check if cached location matches current position
+      final cachedPosition = prefs.getString('cached_position');
+      final currentPosition =
+          '${position.latitude.toStringAsFixed(4)},${position.longitude.toStringAsFixed(4)}';
+      if (cachedPosition == currentPosition) {
+        return cached;
+      }
     }
 
     final url = Uri.parse(
@@ -66,6 +73,9 @@ class LocationService {
         final location = parts.join(', ');
         if (location.isNotEmpty) {
           await prefs.setString(_locationCacheKey, location);
+          await prefs.setString(
+              'cached_position',
+              '${position.latitude.toStringAsFixed(4)},${position.longitude.toStringAsFixed(4)}');
           return location;
         }
       }

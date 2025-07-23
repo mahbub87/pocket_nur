@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "10210531174",
+    "project_id": "pocket-nur",
+    "storage_bucket": "pocket-nur.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:10210531174:android:c23d7522042cde43e01aa7",
+        "android_client_info": {
+          "package_name": "com.example.pocket_nur"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCubMclmFbUm3HkpmM4a5obbw1fbX2DQqs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
