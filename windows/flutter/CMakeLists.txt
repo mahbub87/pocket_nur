@@ -1,6 +1,15 @@
 # This file controls Flutter-level build steps. It should not be edited.
 cmake_minimum_required(VERSION 3.14)
 
+# Set C++ standard and runtime
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# Disable parallel compilation to avoid conflicts
+set(CMAKE_JOB_POOL_COMPILE compile)
+set(CMAKE_JOB_POOL_LINK link)
+
 set(EPHEMERAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ephemeral")
 
 # Configuration provided via flutter tool.
@@ -62,9 +71,15 @@ add_library(flutter_wrapper_plugin STATIC
 )
 apply_standard_settings(flutter_wrapper_plugin)
 set_target_properties(flutter_wrapper_plugin PROPERTIES
-  POSITION_INDEPENDENT_CODE ON)
-set_target_properties(flutter_wrapper_plugin PROPERTIES
-  CXX_VISIBILITY_PRESET hidden)
+  POSITION_INDEPENDENT_CODE ON
+  CXX_VISIBILITY_PRESET hidden
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+target_compile_options(flutter_wrapper_plugin PRIVATE
+    /Zc:__cplusplus
+    /Zc:inline
+    /permissive-
+)
 target_link_libraries(flutter_wrapper_plugin PUBLIC flutter)
 target_include_directories(flutter_wrapper_plugin PUBLIC
   "${WRAPPER_ROOT}/include"
@@ -77,6 +92,14 @@ add_library(flutter_wrapper_app STATIC
   ${CPP_WRAPPER_SOURCES_APP}
 )
 apply_standard_settings(flutter_wrapper_app)
+set_target_properties(flutter_wrapper_app PROPERTIES
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+target_compile_options(flutter_wrapper_app PRIVATE
+    /Zc:__cplusplus
+    /Zc:inline
+    /permissive-
+)
 target_link_libraries(flutter_wrapper_app PUBLIC flutter)
 target_include_directories(flutter_wrapper_app PUBLIC
   "${WRAPPER_ROOT}/include"
@@ -107,3 +130,4 @@ add_custom_target(flutter_assemble DEPENDS
   ${CPP_WRAPPER_SOURCES_PLUGIN}
   ${CPP_WRAPPER_SOURCES_APP}
 )
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
