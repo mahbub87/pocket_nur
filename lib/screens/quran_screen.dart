@@ -17,6 +17,8 @@ class _QuranScreenState extends State<QuranScreen> {
   int _selectedTabIndex = 0;
   bool _isLoading = true;
   String _error = '';
+  List<dynamic> _juz = [];
+  List<dynamic> _pages = [];
 
   @override
   void initState() {
@@ -30,16 +32,22 @@ class _QuranScreenState extends State<QuranScreen> {
         _isLoading = true;
         _error = '';
       });
-      final data = await _quranService.getAllSurahs();
+      final surahs = await _quranService.getAllSurahs();
+      final juz = await _quranService.getAllJuz();
+      final pages = await _quranService.getAllPages();
       setState(() {
-        _surahs = data;
+        _surahs = surahs;
+        _juz = juz;
+        _pages = pages;
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
         _error = 'Failed to load Quran data: ${e.toString()}';
-        print('Error loading Quran data: $e'); // Print the error to the console as well
+        print(
+          'Error loading Quran data: $e',
+        ); // Print the error to the console as well
       });
     }
   }
@@ -49,7 +57,7 @@ class _QuranScreenState extends State<QuranScreen> {
       return _surahs;
     }
     return _surahs.where((surah) {
-      // Check for null or unexpected types before calling toLowerCase() and contains() 
+      // Check for null or unexpected types before calling toLowerCase() and contains()
       final name = surah['name'];
       final arabicName = surah['nameAr'];
 
@@ -60,7 +68,9 @@ class _QuranScreenState extends State<QuranScreen> {
 
       bool arabicNameMatches = false;
       if (arabicName is String) {
-        arabicNameMatches = arabicName.toLowerCase().contains(_searchText.toLowerCase());
+        arabicNameMatches = arabicName.toLowerCase().contains(
+          _searchText.toLowerCase(),
+        );
       }
 
       return nameMatches || arabicNameMatches;
@@ -117,10 +127,10 @@ class _QuranScreenState extends State<QuranScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error.isNotEmpty
-                    ? Center(child: Text('Error: $_error'))
-                    : _filteredSurahs.isEmpty && _searchText.isEmpty
-                        ? const Center(child: Text('No surahs found'))
-                        : _buildBody(),
+                ? Center(child: Text('Error: $_error'))
+                : _filteredSurahs.isEmpty && _searchText.isEmpty
+                ? const Center(child: Text('No surahs found'))
+                : _buildBody(),
           ),
         ],
       ),
@@ -139,14 +149,18 @@ class _QuranScreenState extends State<QuranScreen> {
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(vertical: 12.0),
           decoration: BoxDecoration(
-            color: _selectedTabIndex == index ? Colors.brown[100] : Colors.transparent,
+            color: _selectedTabIndex == index
+                ? Colors.brown[100]
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(20.0),
           ),
           child: Text(
             text,
             style: TextStyle(
               color: _selectedTabIndex == index ? Colors.brown : Colors.black54,
-              fontWeight: _selectedTabIndex == index ? FontWeight.bold : FontWeight.normal,
+              fontWeight: _selectedTabIndex == index
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
         ),
@@ -154,49 +168,97 @@ class _QuranScreenState extends State<QuranScreen> {
     );
   }
 
-  Widget _buildBody() {
-    switch (_selectedTabIndex) {
-      case 0:
-        return ListView.builder(
-          itemCount: _filteredSurahs.length,
-          itemBuilder: (context, index) {
-            final surah = _filteredSurahs[index];
-            return Column(
-              children: [
-                ListTile(
-                  title: Text(surah['name'] ?? ''), // Use English name
-                  subtitle: Text(surah['nameAr'] ?? ''), // Use Arabic name
-                  trailing: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: Colors.green[700],
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(child: Text('${surah['id'] ?? '-'}', style: TextStyle(color: Colors.white, fontSize: 12))), // Use surah ID for number
-                  ),
-                  onTap: () {
-                    if (surah['id'] != null) {
-                       Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SurahScreen(surahNumber: surah['id']), // Pass surah ID
-                        ),
-                      );
-                    }
-                  },
+  Widget _buildJuzView() {
+    return ListView.builder(
+      itemCount: _juz.length,
+      itemBuilder: (context, index) {
+        final item = _juz[index];
+        return ListTile(
+          title: Text('Juz ${item['id'] ?? index + 1}'),
+          subtitle: Text(
+            '${item['startSurah'] ?? ''} - ${item['endSurah'] ?? ''}',
+          ), // Optional
+          onTap: () {
+            if (item['startSurahId'] != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      SurahScreen(surahNumber: item['startSurahId']),
                 ),
-                const Divider(height: 1),
-              ],
-            );
+              );
+            }
           },
         );
-      case 1:
-        return const Center(child: Text('Juz View (Coming Soon)')); // Placeholder for Juz view
-      case 2:
-        return const Center(child: Text('Page View (Coming Soon)')); // Placeholder for Page view
-      default:
-        return Container();
-    }
+      },
+    );
   }
+
+  Widget _buildPageView() {
+    return ListView.builder(
+      itemCount: _pages.length,
+      itemBuilder: (context, index) {
+        final item = _pages[index];
+        return ListTile(
+          title: Text('Page ${item['id'] ?? index + 1}'),
+          subtitle: Text('${item['surahName'] ?? ''}'),
+          onTap: () {
+            if (item['surahId'] != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      SurahScreen(surahNumber: item['surahId']),
+                ),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+Widget _buildSurahView() {
+  return ListView.builder(
+    itemCount: _filteredSurahs.length,
+    itemBuilder: (context, index) {
+      final surah = _filteredSurahs[index];
+      return Column(
+        children: [
+          ListTile(
+            title: Text(surah['name'] ?? ''),
+            subtitle: Text(surah['nameAr'] ?? ''),
+            trailing: CircleAvatar(
+              backgroundColor: Colors.green[700],
+              child: Text('${surah['id'] ?? '-'}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+            ),
+            onTap: () {
+              if (surah['id'] != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SurahScreen(surahNumber: surah['id']),
+                  ),
+                );
+              }
+            },
+          ),
+          const Divider(height: 1),
+        ],
+      );
+    },
+  );
+}
+  
+Widget _buildBody() {
+  switch (_selectedTabIndex) {
+    case 0:
+      return _buildSurahView();
+    case 1:
+      return _buildJuzView();
+    case 2:
+      return _buildPageView();
+    default:
+      return Container();
+  }
+}
 }
