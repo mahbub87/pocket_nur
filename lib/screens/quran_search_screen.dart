@@ -18,7 +18,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     setState(() {
       _isLoading = true;
     });
-    List<Map<String, dynamic>> results = await _quranService.searchAyahs(_searchController.text);
+    final results = await _quranService.searchAyahs(_searchController.text);
     setState(() {
       _searchResults = results;
       _isLoading = false;
@@ -48,17 +48,28 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             _isLoading
                 ? const CircularProgressIndicator()
                 : Expanded(
-                    child: ListView.builder(
-                      itemCount: _searchResults.length,
-                      itemBuilder: (context, index) {
-                        final ayat = _searchResults[index];
-                        return ListTile(
-                          title: Text('Surah ${ayat['surah']} Ayat ${ayat['ayat_number'] ?? 'N/A'}'), // Assuming ayahs have an ayat_number field
-                          subtitle: Text(ayat['translation'] ?? 'No translation available'),
-                          // You might want to add more details or navigate to the Surah screen on tap
-                        );
-                      },
-                    ),
+                    child: _searchResults.isEmpty
+                        ? const Text('No results found.')
+                        : ListView.builder(
+                            itemCount: _searchResults.length,
+                            itemBuilder: (context, index) {
+                              final ayah = _searchResults[index];
+                              return ListTile(
+                                title: Text('Surah ${ayah['surah']} Ayah ${ayah['id']}'),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(ayah['text'] ?? ''),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      ayah['translation'] ?? '',
+                                      style: const TextStyle(fontStyle: FontStyle.italic),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                   ),
           ],
         ),

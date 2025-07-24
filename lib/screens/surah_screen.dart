@@ -13,21 +13,26 @@ class SurahScreen extends StatefulWidget {
 class _SurahScreenState extends State<SurahScreen> {
   final QuranService _quranService = QuranService();
   Map<String, dynamic>? _surahData;
+  List<Map<String, dynamic>> _ayahs = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchSurah();
+    _fetchSurahAndAyahs();
   }
 
-  void _fetchSurah() async {
+  Future<void> _fetchSurahAndAyahs() async {
     setState(() {
       _isLoading = true;
     });
-    Map<String, dynamic>? data = await _quranService.getSurah(widget.surahNumber);
+
+    final surah = await _quranService.getSurah(widget.surahNumber);
+    final ayahs = await _quranService.getAyahsForSurah(widget.surahNumber);
+
     setState(() {
-      _surahData = data;
+      _surahData = surah;
+      _ayahs = ayahs;
       _isLoading = false;
     });
   }
@@ -35,22 +40,30 @@ class _SurahScreenState extends State<SurahScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Surah ${widget.surahNumber}')), // Display surah number in AppBar
+      appBar: AppBar(
+        title: Text(_surahData != null
+            ? _surahData!['name'] ?? 'Surah ${widget.surahNumber}'
+            : 'Surah ${widget.surahNumber}'),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _surahData == null
               ? const Center(child: Text('Could not load surah.'))
               : ListView.builder(
-                  itemCount: (_surahData!['ayahs'] as List).length,
+                  itemCount: _ayahs.length,
                   itemBuilder: (context, index) {
-                    final ayat = _surahData!['ayahs'][index];
+                    final ayah = _ayahs[index];
                     return ListTile(
-                      title: Text('Ayat ${index + 1}'), // Display ayat number (assuming they are in order)
+                      title: Text('Ayah ${ayah['id']}'),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(ayat['text'] ?? ''),
-                          Text(ayat['translation'] ?? '', style: const TextStyle(fontStyle: FontStyle.italic)),
+                          Text(ayah['text'] ?? ''),
+                          const SizedBox(height: 4),
+                          Text(
+                            ayah['translation'] ?? '',
+                            style: const TextStyle(fontStyle: FontStyle.italic),
+                          ),
                         ],
                       ),
                     );
